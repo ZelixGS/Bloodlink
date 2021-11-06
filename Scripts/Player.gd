@@ -4,6 +4,8 @@ extends KinematicBody2D
 # Related to state machine logic, went with enum instead of strings to have less typing.
 # We do maintain a previous state knowledge in case we need it in the future, but was largely
 # debugging.
+onready var ragdoll: PackedScene = preload("res://Scenes/Player/Gibs/Ragdoll.tscn")
+
 enum {DEAD, IDLE, MOVE, JUMP, FALL}
 var state: int = FALL setget set_state
 var previous_state: int = 1
@@ -19,11 +21,13 @@ var max_velocity: float = move_speed
 var current_max_velocity: float = max_velocity
 
 var was_on_floor: bool = false
+var hit_the_ground: bool = false
 var last_facing: int = 1
 var velocity: Vector2 = Vector2.ZERO
 var floor_snap: Vector2
 
 onready var facing: Node2D = $Facing
+onready var sprite: Sprite = $Sprite
 onready var ray_ceiling: RayCast2D = $Facing/Rays/Ceiling
 onready var ray_forward: RayCast2D = $Facing/Rays/Forward
 onready var camera: Camera2D = $GameCamera
@@ -39,16 +43,26 @@ onready var jump_velocity: float = ((2.0 * jump_height) / jump_time_to_peak) * -
 onready var jump_gravity: float = ((-2.0 * jump_height) / (jump_time_to_peak * jump_time_to_peak)) * -1.0
 onready var fall_gravity: float = ((-2.0 * jump_height) / (jump_time_to_fall * jump_time_to_fall)) * -1.0
 
+export(int) var max_health: int = 100
+var current_health: int = max_health setget update_health
+
+func update_health(value: int) -> void:
+	current_health += value
+	current_health = clamp(current_health, 0, max_health)
+	if current_health <= 0:
+		death()
+
 func _physics_process(delta: float) -> void:
 	handle_state(delta)
 
-# Helper function to set new state and previous state.
 func set_state(new_state: int) -> void:
 	previous_state = state
 	state = new_state
 
 func handle_state(delta: float) -> void:
-	if [IDLE, MOVE].has(state):
+	if state == DEAD:
+		return
+	elif [IDLE, MOVE].has(state):
 		apply_gravity(delta)
 		if not is_on_floor():
 			set_state(FALL)
@@ -103,8 +117,18 @@ func apply_gravity(delta: float) -> void:
 func detect_ceiling() -> bool:
 	return true if ray_ceiling.is_colliding() else false
 
+func death() -> void:
+	set_state(DEAD)
+	$Standing.disabled = true
+	$Sprite.visible = false
+	var new_ragdoll = ragdoll.instance()
+	new_ragdoll.transform = global_transform
+	get_node("/root").add_child(new_ragdoll)
+
 func _unhandled_input(event) -> void:
 	if event.is_action_pressed("exit"):
 		get_tree().quit()
 	if event.is_action_pressed("restart"):
 		var _discard := get_tree().reload_current_scene()
+	if event.is_action_pressed("suicide"):
+		death()

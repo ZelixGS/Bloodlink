@@ -3,10 +3,10 @@ extends CanvasLayer
 onready var debug_text: Label = $Control/Label
 
 onready var player: Player = get_tree().get_nodes_in_group("Player").front()
+onready var health_bar: TextureProgress = $Control/Healthbar
 
 func _process(_delta: float):
-#	if player.state != player.previous_state:
-#		print(state_to_string(player.state))
+	health_bar.value = G.player.current_health
 	debug_text.text = str("FPS: %s" % [Engine.get_frames_per_second()])
 	debug_text.text += str("\nInput: %s" % [G.get_input()])
 	debug_text.text += str("\nPosition: %.1f/%.1f" % [player.position.x, player.position.y])
@@ -22,7 +22,9 @@ func _process(_delta: float):
 
 func state_to_string(value: int) -> String:
 	var temp: String = "N/A"
-	match value: 
+	match value:
+		player.DEAD:
+			temp = "Dead"
 		player.IDLE:
 			temp = "Idle"
 		player.MOVE:
@@ -46,18 +48,3 @@ func state_to_string(value: int) -> String:
 		player.GROUNDSLAM:
 			temp = "POWER SLAM!!"
 	return(temp)
-
-#func wall_type() -> String:
-#	var temp: String = "N/A"
-#	match player.detect_wall():
-#		player.NULL:
-#			temp = "NULL"
-#		player.WALL:
-#			temp = "Wall"
-#		player.CAN_CLAMBER:
-#			temp = "Clamber"
-#		player.CAN_CRAWL:
-#			temp = "Crawl"
-#		player.CAN_CLAMBER_CRAWL:
-#			temp = "Clamber and Crawl"
-#	return temp
