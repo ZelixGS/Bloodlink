@@ -1,2 +1,0 @@
-# Bloodlink
-A personal gamejam
