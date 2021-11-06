@@ -1,0 +1,51 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://Sprites/colored_packed.png" type="Texture" id=1]
+[ext_resource path="res://Scripts/Player.gd" type="Script" id=2]
+[ext_resource path="res://Scenes/Player/UI.tscn" type="PackedScene" id=3]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 7, 7 )
+
+[node name="Player" type="KinematicBody2D" groups=["Player"]]
+collision_layer = 32
+script = ExtResource( 2 )
+jump_buffer = 0.15
+coyate_buffer = 0.25
+jump_height = 80.0
+jump_time_to_fall = 0.25
+
+[node name="Standing" type="CollisionShape2D" parent="."]
+position = Vector2( 0, 2 )
+shape = SubResource( 1 )
+
+[node name="Facing" type="Node2D" parent="."]
+
+[node name="Rays" type="Node2D" parent="Facing"]
+
+[node name="Ceiling" type="RayCast2D" parent="Facing/Rays"]
+position = Vector2( 0, -5 )
+enabled = true
+cast_to = Vector2( 0, -2 )
+
+[node name="Forward" type="RayCast2D" parent="Facing/Rays"]
+enabled = true
+cast_to = Vector2( 9, 0 )
+collision_mask = 9
+
+[node name="Sprite" type="Sprite" parent="."]
+modulate = Color( 0.211765, 1, 0.576471, 1 )
+position = Vector2( 0, 2 )
+texture = ExtResource( 1 )
+region_enabled = true
+region_rect = Rect2( 432, 64, 16, 16 )
+
+[node name="UI" parent="." instance=ExtResource( 3 )]
+
+[node name="Timers" type="Node" parent="."]
+
+[node name="JumpBuffer" type="Timer" parent="Timers"]
+one_shot = true
+
+[node name="JumpCoyate" type="Timer" parent="Timers"]
+one_shot = true
